@@ -1,0 +1,26 @@
+{
+  "name": "rankit-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": ["rankit", "payment", "server", "express"],
+  "author": "RankIt Team",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cashfree-pg": "^5.0.8",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2"
+  },
+  "description": "Backend server for RankIt payment gateway and API services"
+} 
