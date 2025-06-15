@@ -190,7 +190,7 @@ app.all('/payment', async (req, res) => {
                     ? "https://my-nmha4dyea-abhisheks-projects-10c7cd34.vercel.app/payment/return?order_id={order_id}" 
                     : "http://localhost:3000/payment/return?order_id={order_id}",
                 "notify_url": isProduction 
-                    ? `${process.env.REACT_APP_API_URL || 'https://rankit.onrender.com'}/webhook` 
+                    ? `${process.env.REACT_APP_API_URL || 'https://rankit-z5g4.onrender.com'}/webhook` 
                     : "http://localhost:8000/webhook"
             }
         };

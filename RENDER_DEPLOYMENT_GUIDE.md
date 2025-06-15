@@ -46,7 +46,7 @@ REACT_APP_CASHFREE_ENVIRONMENT=sandbox
 MONGODB_URI=your_mongodb_connection_string
 
 # API URL (will be your Render URL)
-REACT_APP_API_URL=https://rankit.onrender.com
+REACT_APP_API_URL=https://rankit-z5g4.onrender.com
 ```
 
 ## Step 5: Update server.js for Production
@@ -71,20 +71,20 @@ const allowedOrigins = [
 1. Click **"Create Web Service"**
 2. Render will automatically deploy from your GitHub repo
 3. Wait for deployment to complete (usually 2-5 minutes)
-4. Your server will be available at: `https://rankit.onrender.com`
+4. Your server will be available at: `https://rankit-z5g4.onrender.com`
 
 ## Step 7: Test Your Deployment
 
 Test these endpoints:
 
-1. **Health Check**: `https://rankit.onrender.com/debug-auth`
-2. **Pricing**: `https://rankit.onrender.com/pricing`
+1. **Health Check**: `https://rankit-z5g4.onrender.com/debug-auth`
+2. **Pricing**: `https://rankit-z5g4.onrender.com/pricing`
 
 ## Step 8: Update Frontend Environment Variables
 
 In your Vercel dashboard, add this environment variable:
 - **Key**: `REACT_APP_API_URL`
-- **Value**: `https://rankit.onrender.com`
+- **Value**: `https://rankit-z5g4.onrender.com`
 
 ## Common Issues & Solutions
 
@@ -128,4 +128,4 @@ For production use, consider:
 - [ ] Test payment flow works
 - [ ] Real Cashfree credentials configured
 
-Your payment server should now be live at: **https://rankit.onrender.com** 
+Your payment server should now be live at: **https://rankit-z5g4.onrender.com** 

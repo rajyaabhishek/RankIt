@@ -50,7 +50,7 @@ function PaymentReturnContent() {
       console.log(`🔍 Verifying payment for order: ${orderId} (attempt ${retryAttempt + 1})`)
       
       const serverUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://rankit.onrender.com' 
+        ? 'https://rankit-z5g4.onrender.com' 
         : 'http://localhost:5000';
       
       const response = await fetch(`${serverUrl}/verify`, {

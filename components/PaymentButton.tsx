@@ -101,7 +101,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ planType, onSuccess, clas
       const paymentUrl = process.env.REACT_APP_API_URL 
         ? `${process.env.REACT_APP_API_URL}/payment?${queryParams}`
         : process.env.NODE_ENV === 'production' 
-          ? `https://rankit.onrender.com/payment?${queryParams}`
+          ? `https://rankit-z5g4.onrender.com/payment?${queryParams}`
           : `http://localhost:8000/payment?${queryParams}`;
       
       console.log('Making payment request to:', paymentUrl);
@@ -150,7 +150,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ planType, onSuccess, clas
             const verifyUrl = process.env.REACT_APP_API_URL 
               ? `${process.env.REACT_APP_API_URL}/verify`
               : process.env.NODE_ENV === 'production' 
-                ? 'https://rankit.onrender.com/verify'
+                ? 'https://rankit-z5g4.onrender.com/verify'
                 : 'http://localhost:8000/verify';
               
             const verifyResponse = await fetch(verifyUrl, {
@@ -202,7 +202,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ planType, onSuccess, clas
           const verifyUrl = process.env.REACT_APP_API_URL 
             ? `${process.env.REACT_APP_API_URL}/verify`
             : process.env.NODE_ENV === 'production' 
-              ? 'https://rankit.onrender.com/verify'
+              ? 'https://rankit-z5g4.onrender.com/verify'
               : 'http://localhost:8000/verify';
             
           const verifyResponse = await fetch(verifyUrl, {
