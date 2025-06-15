@@ -1,0 +1,319 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 200 78% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 200 78% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 78% 9%;
+    --primary: 60 100% 91%;
+    --primary-foreground: 200 78% 9%;
+    --secondary: 210 15% 95%;
+    --secondary-foreground: 200 78% 9%;
+    --muted: 210 15% 96%;
+    --muted-foreground: 210 8% 45%;
+    --accent: 60 100% 91%;
+    --accent-foreground: 200 78% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 15% 90%;
+    --input: 210 15% 90%;
+    --ring: 60 100% 91%;
+    --chart-1: 60 100% 91%;
+    --chart-2: 200 78% 9%;
+    --chart-3: 200 80% 60%;
+    --chart-4: 320 80% 60%;
+    --chart-5: 160 80% 60%;
+    --radius: 12px;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 200 78% 9%;
+    --sidebar-primary: 60 100% 91%;
+    --sidebar-primary-foreground: 200 78% 9%;
+    --sidebar-accent: 60 100% 91%;
+    --sidebar-accent-foreground: 200 78% 9%;
+    --sidebar-border: 210 15% 90%;
+    --sidebar-ring: 60 100% 91%;
+  }
+  .dark {
+    --background: 200 78% 9%;
+    --foreground: 60 100% 91%;
+    --card: 200 78% 12%;
+    --card-foreground: 60 100% 91%;
+    --popover: 200 78% 12%;
+    --popover-foreground: 60 100% 91%;
+    --primary: 60 100% 91%;
+    --primary-foreground: 200 78% 9%;
+    --secondary: 200 50% 18%;
+    --secondary-foreground: 60 100% 91%;
+    --muted: 200 50% 15%;
+    --muted-foreground: 210 8% 65%;
+    --accent: 200 50% 20%;
+    --accent-foreground: 60 100% 91%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 200 50% 18%;
+    --input: 200 50% 18%;
+    --ring: 60 100% 91%;
+    --chart-1: 60 100% 91%;
+    --chart-2: 200 78% 9%;
+    --chart-3: 200 80% 70%;
+    --chart-4: 320 80% 70%;
+    --chart-5: 160 80% 70%;
+    --sidebar-background: 200 78% 12%;
+    --sidebar-foreground: 60 100% 91%;
+    --sidebar-primary: 60 100% 91%;
+    --sidebar-primary-foreground: 200 78% 9%;
+    --sidebar-accent: 200 50% 18%;
+    --sidebar-accent-foreground: 60 100% 91%;
+    --sidebar-border: 200 50% 18%;
+    --sidebar-ring: 60 100% 91%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    letter-spacing: -0.01em;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom theme classes */
+.bg-navy-deep {
+  background: #101820;
+}
+
+.bg-yellow-bright {
+  background: #FEE715;
+}
+
+.text-navy {
+  color: #101820;
+}
+
+.text-yellow {
+  color: #FEE715;
+}
+
+.border-navy {
+  border-color: #101820;
+}
+
+.border-yellow {
+  border-color: #FEE715;
+}
+
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds for visual appeal */
+.bg-gradient-navy {
+  background: linear-gradient(135deg, #101820 0%, #1a252f 100%);
+}
+
+.bg-gradient-yellow {
+  background: linear-gradient(135deg, #FEE715 0%, #ffd700 100%);
+}
+
+.bg-gradient-navy-yellow {
+  background: linear-gradient(135deg, #101820 0%, #FEE715 100%);
+}
+
+/* Enhanced card styles - Light Theme with Dark Text */
+.card-elegant {
+  @apply bg-white border border-gray-200 rounded-xl shadow-sm text-navy-deep;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-elegant:hover {
+  @apply shadow-xl border-yellow-bright border-opacity-50;
+  transform: translateY(-2px);
+}
+
+.card-featured {
+  @apply bg-gradient-navy text-white border-yellow-bright;
+  box-shadow: 0 20px 25px -5px rgba(16, 24, 32, 0.2), 0 10px 10px -5px rgba(16, 24, 32, 0.1);
+}
+
+/* Button enhancements */
+.btn-primary {
+  @apply bg-navy-deep hover:bg-navy-800 text-yellow-bright font-medium px-6 py-3 rounded-lg;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  @apply shadow-lg;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  @apply bg-yellow-bright hover:bg-yellow-300 text-navy-deep font-medium px-6 py-3 rounded-lg;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+  @apply shadow-lg;
+  transform: translateY(-1px);
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Improved focus states */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #FEE715;
+  outline-offset: 2px;
+}
+
+/* Section headers */
+.section-header {
+  @apply text-3xl font-bold text-navy-deep mb-8 text-center;
+}
+
+.section-subheader {
+  @apply text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12;
+}
+
+/* Hero section styling - Dark with Light Text */
+.hero-gradient {
+  background: linear-gradient(135deg, #101820 0%, #1a252f 50%, #101820 100%);
+}
+
+/* Category cards - Light Theme with Dark Text */
+.category-card {
+  @apply bg-white rounded-xl p-6 border border-gray-200 hover:border-yellow-bright hover:shadow-lg text-navy-deep;
+  transition: all 0.3s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(254, 231, 21, 0.3);
+}
+
+/* Stats cards - Light Theme */
+.stats-card {
+  @apply bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 border border-gray-200 text-navy-deep;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .section-header {
+    @apply text-2xl mb-6;
+  }
+  
+  .card-elegant {
+    @apply mx-4;
+  }
+}
+
+/* Badge styles - Proper Contrast */
+.badge-primary {
+  @apply bg-navy-deep text-yellow-bright px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.badge-secondary {
+  @apply bg-yellow-bright text-navy-deep px-3 py-1 rounded-full text-sm font-medium;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #101820;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FEE715;
+}
+
+/* Page Transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Ensure smooth transitions for all pages */
+.min-h-screen {
+  animation: fadeIn 300ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
