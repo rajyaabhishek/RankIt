@@ -1,10 +1,10 @@
-import { Ranking, connectToDatabase } from '@/lib/database/model/rankings';
+import { Ranking, connectToDatabase } from '@/lib/database/model/rankings.js';
 import {
   calculateVoteChange,
   getVote,
   getVoteSummary,
   upsertVote
-} from '@/lib/database/model/votes';
+} from '@/lib/database/model/votes.js';
 import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
@@ -27,13 +27,28 @@ function isValidObjectId(id: string): boolean {
   return mongoose.Types.ObjectId.isValid(id) && (id.length === 12 || id.length === 24);
 }
 
+// Helper function to create a robust search query for rankings
+function createRankingSearchQuery(rankingId: string) {
+  const queries = [];
+  
+  // Always try custom id field first
+  queries.push({ id: rankingId });
+  
+  // If it's a valid ObjectId, also try _id field
+  if (isValidObjectId(rankingId)) {
+    queries.push({ _id: new mongoose.Types.ObjectId(rankingId) });
+  }
+  
+  return { $or: queries };
+}
+
 // GET handler to get vote summary for an item
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const rankingId = params.id;
+    const { id: rankingId } = await params;
     const url = new URL(request.url);
     const itemId = url.searchParams.get('itemId');
     const userId = url.searchParams.get('userId');
@@ -78,10 +93,10 @@ export async function GET(
 // POST handler to add or update a vote
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const rankingId = params.id;
+    const { id: rankingId } = await params;
     const body = await request.json();
     let { userId, itemId, direction } = body;
     
@@ -119,18 +134,8 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Build search query based on whether the ID is a valid ObjectId or custom string ID
-    let searchQuery;
-    if (isValidObjectId(rankingId)) {
-      searchQuery = {
-        $or: [
-          { _id: new mongoose.Types.ObjectId(rankingId) },
-          { id: rankingId }
-        ]
-      };
-    } else {
-      searchQuery = { id: rankingId };
-    }
+    // Use the robust search query helper
+    const searchQuery = createRankingSearchQuery(rankingId);
 
     // Get the ranking info for metadata
     const ranking = await Ranking.findOne(searchQuery).lean() as unknown as RankingDocument;

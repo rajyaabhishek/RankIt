@@ -1,109 +1,64 @@
-import { NextResponse } from 'next/server';
-import { getUserVotes, upsertVote, deleteUserVotes } from '@/lib/database/model/votes';
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserVotes, getVote } from '@/lib/database/model/votes.js';
 import { currentUser } from '@clerk/nextjs/server';
 
-export async function GET(request: Request) {
+// GET /api/user/votes - Get user's votes
+export async function GET(request: NextRequest) {
   try {
-    // Extract userId from query params first
-    const url = new URL(request.url);
-    const queryUserId = url.searchParams.get('userId');
-    
-    let userId = queryUserId;
-    
-    // Try to get authenticated user as fallback
+    const searchParams = request.nextUrl.searchParams;
+    const rankingId = searchParams.get('rankingId');
+    const itemId = searchParams.get('itemId');
+    let userId = searchParams.get('userId');
+
+    // Try to get authenticated user, but don't fail if Clerk middleware isn't working
+    let user = null;
     try {
-      const user = await currentUser();
-      if (!userId && user?.id) {
+      user = await currentUser();
+      if (user && !userId) {
         userId = user.id;
       }
-    } catch (clerkError: any) {
-      console.warn('Clerk authentication not available:', clerkError?.message || 'Unknown error');
-      // Continue with queryUserId if available
+    } catch (clerkError) {
+      console.warn('Clerk authentication not available:', clerkError);
+      // Continue with provided userId if available
     }
 
     if (!userId) {
       return NextResponse.json({ 
-        success: false, 
-        error: 'User ID is required. Please provide userId parameter or sign in.' 
+        error: 'User ID is required. Please provide userId parameter or ensure authentication is working.' 
       }, { status: 400 });
     }
 
-    const votes = await getUserVotes(userId);
-    
-    // Group votes by category and ranking
-    const votesByCategory: Record<string, any[]> = {};
-    const votesByRanking: Record<string, any[]> = {};
-    
-    votes.forEach(vote => {
-      // Group by category - use direct category field
-      const category = vote.category || 'Uncategorized';
-      if (!votesByCategory[category]) {
-        votesByCategory[category] = [];
-      }
-      votesByCategory[category].push(vote);
-      
-      // Group by ranking
-      if (!votesByRanking[vote.rankingId]) {
-        votesByRanking[vote.rankingId] = [];
-      }
-      votesByRanking[vote.rankingId].push(vote);
-    });
-    
-    return NextResponse.json({ 
-      success: true, 
-      votes,
-      votesByCategory,
-      votesByRanking
-    });
-  } catch (error: any) {
-    console.error('Error fetching user votes:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to fetch votes' }, { status: 500 });
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { userId, rankingId, itemId, direction, metadata } = body;
-
-    if (!userId || !rankingId || itemId === undefined) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields: userId, rankingId, and itemId are required' },
-        { status: 400 }
-      );
+    // If we have an authenticated user, validate access
+    if (user && userId !== user.id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    const result = await upsertVote(userId, rankingId, itemId, direction, metadata);
-    return NextResponse.json({ success: true, vote: result });
-  } catch (error: any) {
-    console.error('Error upserting vote:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to update vote' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-    const rankingId = url.searchParams.get('rankingId');
-    const itemId = url.searchParams.get('itemId');
-
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
-    }
-
-    // If rankingId and itemId are provided, delete a specific vote
-    // Otherwise, delete all votes for the user
-    let result;
     if (rankingId && itemId) {
-      result = await upsertVote(userId, rankingId, parseInt(itemId), null);
+      // Get specific vote for ranking item
+      const vote = await getVote(userId, rankingId, parseInt(itemId));
+      return NextResponse.json({ success: true, vote });
+    } else if (rankingId) {
+      // Get all votes for a specific ranking
+      const allVotes = await getUserVotes(userId);
+      const rankingVotes = allVotes.filter(vote => vote.rankingId === rankingId);
+      return NextResponse.json({ success: true, votes: rankingVotes });
     } else {
-      result = await deleteUserVotes(userId);
+      // Get all user votes
+      const votes = await getUserVotes(userId);
+      return NextResponse.json({ success: true, votes });
     }
-
-    return NextResponse.json({ success: true, result });
   } catch (error: any) {
-    console.error('Error deleting votes:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to delete votes' }, { status: 500 });
+    console.error('Error in GET /api/user/votes:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch votes',
+        details: error.message,
+        type: error.constructor.name
+      },
+      { status: 500 }
+    );
   }
 }
+

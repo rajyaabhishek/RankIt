@@ -4,9 +4,9 @@ import {
   upsertVote, 
   getVote, 
   calculateVoteChange 
-} from '@/lib/database/model/votes';
-import { Ranking } from '@/lib/database/model/rankings';
-import { connectToDatabase } from '@/lib/database/model/rankings';
+} from '@/lib/database/model/votes.js';
+import { Ranking } from '@/lib/database/model/rankings.js';
+import { connectToDatabase } from '@/lib/database/model/rankings.js';
 import mongoose from 'mongoose';
 
 // Add a type definition for ranking object
@@ -27,13 +27,28 @@ function isValidObjectId(id: string): boolean {
   return mongoose.Types.ObjectId.isValid(id) && (id.length === 12 || id.length === 24);
 }
 
+// Helper function to create a robust search query for rankings
+function createRankingSearchQuery(rankingId: string) {
+  const queries = [];
+  
+  // Always try custom id field first
+  queries.push({ id: rankingId });
+  
+  // If it's a valid ObjectId, also try _id field
+  if (isValidObjectId(rankingId)) {
+    queries.push({ _id: new mongoose.Types.ObjectId(rankingId) });
+  }
+  
+  return { $or: queries };
+}
+
 // GET handler to retrieve ranking details or vote summary for a specific item
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const rankingId = params.id;
+    const { id: rankingId } = await params;
     const url = new URL(request.url);
     const itemId = url.searchParams.get('itemId');
     const userId = url.searchParams.get('userId');
@@ -57,20 +72,8 @@ export async function GET(
       }
     }
     
-    // Build search query based on whether the ID is a valid ObjectId or custom string ID
-    let searchQuery;
-    if (isValidObjectId(rankingId)) {
-      // If it's a valid ObjectId, search by both _id and id fields
-      searchQuery = {
-        $or: [
-          { _id: new mongoose.Types.ObjectId(rankingId) },
-          { id: rankingId }
-        ]
-      };
-    } else {
-      // If it's not a valid ObjectId, only search by the custom id field
-      searchQuery = { id: rankingId };
-    }
+    // Use the robust search query helper
+    const searchQuery = createRankingSearchQuery(rankingId);
     
     // If no itemId is provided, return the ranking details
     const ranking = await Ranking.findOne(searchQuery).lean();
@@ -101,10 +104,10 @@ export async function GET(
 // POST handler to add or update a vote
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const rankingId = params.id;
+    const { id: rankingId } = await params;
     const body = await request.json();
     const { userId, itemId, direction } = body;
 
@@ -124,18 +127,8 @@ export async function POST(
 
     await connectToDatabase();
 
-    // Build search query based on whether the ID is a valid ObjectId or custom string ID
-    let searchQuery;
-    if (isValidObjectId(rankingId)) {
-      searchQuery = {
-        $or: [
-          { _id: new mongoose.Types.ObjectId(rankingId) },
-          { id: rankingId }
-        ]
-      };
-    } else {
-      searchQuery = { id: rankingId };
-    }
+    // Use the robust search query helper
+    const searchQuery = createRankingSearchQuery(rankingId);
 
     // Then update the findOne call with proper typing
     const ranking = await Ranking.findOne(searchQuery).lean() as unknown as RankingDocument;

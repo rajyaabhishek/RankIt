@@ -5,14 +5,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowDownCircle, ArrowLeft, ArrowUpCircle, Flag, Heart, Share2, Crown, Star, Trophy, Target, Calendar, User, Zap, Flame, Eye, Medal, Award, Edit3, Plus, Trash2, Save, X } from "lucide-react"
+import { ArrowDownCircle, ArrowLeft, ArrowUpCircle, Flag, Heart, Share2, Star, Target, Calendar, User, Eye, Crown, Flame, Zap, Trophy } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
-import { usePremium } from "@/hooks/use-premium"
 
 interface RankingItem {
   id: number;
@@ -40,7 +37,6 @@ export default function RankingPage({ params }: { params: any }) {
   const pathname = usePathname();
   const rankingId = pathname ? pathname.split('/').pop() : "";
   const { isSignedIn, user } = useUser();
-  const { isPremium } = usePremium();
   
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,12 +45,7 @@ export default function RankingPage({ params }: { params: any }) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [isLikeLoading, setIsLikeLoading] = useState(false)
   
-  // Edit mode states
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editedItems, setEditedItems] = useState<RankingItem[]>([]);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemDescription, setNewItemDescription] = useState("");
+
 
   useEffect(() => {
     const fetchRanking = async () => {
@@ -318,90 +309,7 @@ export default function RankingPage({ params }: { params: any }) {
     }
   }
 
-  // Edit mode functions
-  const canEditRanking = isSignedIn && isPremium && ranking && user?.username === ranking.author.name;
 
-  const enterEditMode = () => {
-    if (!ranking) return;
-    setEditedItems([...ranking.items]);
-    setIsEditMode(true);
-  };
-
-  const exitEditMode = () => {
-    setIsEditMode(false);
-    setEditedItems([]);
-    setNewItemName("");
-    setNewItemDescription("");
-  };
-
-  const addNewItem = () => {
-    if (!newItemName.trim()) return;
-    
-    const newItem: RankingItem = {
-      id: Date.now(), // Temporary ID - will be replaced by backend
-      name: newItemName.trim(),
-      description: newItemDescription.trim() || undefined,
-      votes: 0
-    };
-    
-    setEditedItems([...editedItems, newItem]);
-    setNewItemName("");
-    setNewItemDescription("");
-  };
-
-  const removeItem = (itemId: number) => {
-    setEditedItems(editedItems.filter(item => item.id !== itemId));
-  };
-
-  const updateItemName = (itemId: number, newName: string) => {
-    setEditedItems(editedItems.map(item => 
-      item.id === itemId ? { ...item, name: newName } : item
-    ));
-  };
-
-  const updateItemDescription = (itemId: number, newDescription: string) => {
-    setEditedItems(editedItems.map(item => 
-      item.id === itemId ? { ...item, description: newDescription } : item
-    ));
-  };
-
-  const saveChanges = async () => {
-    if (!ranking || !rankingId) return;
-    
-    setIsUpdating(true);
-    try {
-      const response = await fetch(`/api/rankings/${rankingId}/edit`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: editedItems.map(item => ({
-            name: item.name,
-            description: item.description,
-            votes: item.votes // Keep existing votes
-          }))
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to update ranking');
-      }
-
-      // Update the ranking state with new data
-      setRanking(result.ranking);
-      exitEditMode();
-      alert('Ranking updated successfully! 🎉');
-
-    } catch (error) {
-      console.error('Error updating ranking:', error);
-      alert('Failed to update ranking. Please try again.');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -482,44 +390,6 @@ export default function RankingPage({ params }: { params: any }) {
             </div>
             
             <div className="flex items-center gap-2">
-              {canEditRanking && (
-                <>
-                  {!isEditMode ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={enterEditMode}
-                      className="gap-2 border-yellow text-navy hover:bg-yellow/10"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                      Edit Ranking
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={saveChanges}
-                        disabled={isUpdating}
-                        className="gap-2 border-green-500 text-green-600 hover:bg-green-50"
-                      >
-                        <Save className="h-4 w-4" />
-                        {isUpdating ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={exitEditMode}
-                        disabled={isUpdating}
-                        className="gap-2 border-red-500 text-red-600 hover:bg-red-50"
-                      >
-                        <X className="h-4 w-4" />
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -598,74 +468,19 @@ export default function RankingPage({ params }: { params: any }) {
               <h2 className="text-xl font-bold text-navy flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow" />
                 Ranking Items
-                {isEditMode && (
-                  <Badge variant="secondary" className="ml-2 bg-yellow/20 text-navy">
-                    Edit Mode
-                  </Badge>
-                )}
               </h2>
-              
-              {isEditMode && (
-                <div className="text-sm text-navy/60">
-                  {editedItems.length} item{editedItems.length !== 1 ? 's' : ''}
-                </div>
-              )}
             </div>
             
-            {/* Add new item form (only in edit mode) */}
-            {isEditMode && (
-              <Card className="border-2 border-dashed border-yellow/50 bg-yellow/5">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Plus className="h-5 w-5 text-yellow" />
-                    <h3 className="font-bold text-navy">Add New Item</h3>
-                  </div>
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="new-item-name" className="text-navy font-semibold">Name *</Label>
-                      <Input
-                        id="new-item-name"
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
-                        placeholder="Enter item name..."
-                        className="border-2 border-gray-200 focus:border-yellow"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="new-item-description" className="text-navy font-semibold">Description</Label>
-                      <Input
-                        id="new-item-description"
-                        value={newItemDescription}
-                        onChange={(e) => setNewItemDescription(e.target.value)}
-                        placeholder="Enter description (optional)..."
-                        className="border-2 border-gray-200 focus:border-yellow"
-                      />
-                    </div>
-                    <Button
-                      onClick={addNewItem}
-                      disabled={!newItemName.trim()}
-                      className="bg-yellow hover:bg-yellow/80 text-navy self-start"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Item
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
             {/* Ranking items list */}
-            {(isEditMode ? editedItems : ranking?.items || []).length > 0 ? (
-              (isEditMode ? editedItems : ranking?.items || [])
+            {(ranking?.items || []).length > 0 ? (
+              (ranking?.items || [])
                 .sort((a, b) => b.votes - a.votes)
                 .map((item, index) => {
                   const position = index + 1;
                   const userVote = votedItems[item.id];
                   
                   return (
-                    <Card key={item.id} className={`overflow-hidden transition-all bg-white border-2 ${
-                      isEditMode ? 'border-yellow/30' : 'border-gray-200 hover:scale-105 hover:border-yellow'
-                    } group`}>
+                    <Card key={item.id} className="overflow-hidden transition-all bg-white border-2 border-gray-200 hover:scale-105 hover:border-yellow group">
                       <CardContent className="p-6">
                         <div className="flex items-center gap-6">
                           {/* Position indicator */}
@@ -675,87 +490,46 @@ export default function RankingPage({ params }: { params: any }) {
                           
                           {/* Item content */}
                           <div className="flex-1 min-w-0">
-                            {isEditMode ? (
-                              <div className="space-y-3">
-                                <div>
-                                  <Label className="text-navy font-semibold text-sm">Name</Label>
-                                  <Input
-                                    value={item.name}
-                                    onChange={(e) => updateItemName(item.id, e.target.value)}
-                                    className="mt-1 border-2 border-gray-200 focus:border-yellow"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-navy font-semibold text-sm">Description</Label>
-                                  <Input
-                                    value={item.description || ''}
-                                    onChange={(e) => updateItemDescription(item.id, e.target.value)}
-                                    placeholder="Optional description..."
-                                    className="mt-1 border-2 border-gray-200 focus:border-yellow"
-                                  />
-                                </div>
-                                <div className="flex items-center gap-1 text-sm text-navy/60">
-                                  <Star className="h-4 w-4 text-yellow" />
-                                  <span>{item.votes} votes (preserved)</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <h3 className="text-lg font-bold text-navy mb-1 line-clamp-2">{item.name}</h3>
-                                {item.description && (
-                                  <p className="text-navy/60 text-sm line-clamp-2 mb-2">{item.description}</p>
-                                )}
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-1">
-                                    <Star className="h-4 w-4 text-yellow" />
-                                    <span className="text-sm font-semibold text-navy">{item.votes} votes</span>
-                                  </div>
-                                </div>
-                              </>
+                            <h3 className="text-lg font-bold text-navy mb-1 line-clamp-2">{item.name}</h3>
+                            {item.description && (
+                              <p className="text-navy/60 text-sm line-clamp-2 mb-2">{item.description}</p>
                             )}
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 text-yellow" />
+                                <span className="text-sm font-semibold text-navy">{item.votes} votes</span>
+                              </div>
+                            </div>
                           </div>
                           
                           {/* Action buttons */}
                           <div className="flex flex-col items-center gap-2">
-                            {isEditMode ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeItem(item.id)}
-                                className="text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </Button>
-                            ) : (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleVote(item.id, "up")}
-                                  className={`transition-all hover:scale-110 ${
-                                    userVote === "up" 
-                                      ? "text-green-600 bg-green-100 hover:bg-green-200" 
-                                      : "text-navy/60 hover:text-green-600 hover:bg-green-50"
-                                  }`}
-                                  disabled={!isSignedIn}
-                                >
-                                  <ArrowUpCircle className="h-6 w-6" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleVote(item.id, "down")}
-                                  className={`transition-all hover:scale-110 ${
-                                    userVote === "down" 
-                                      ? "text-red-600 bg-red-100 hover:bg-red-200" 
-                                      : "text-navy/60 hover:text-red-600 hover:bg-red-50"
-                                  }`}
-                                  disabled={!isSignedIn}
-                                >
-                                  <ArrowDownCircle className="h-6 w-6" />
-                                </Button>
-                              </>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleVote(item.id, "up")}
+                              className={`transition-all hover:scale-110 ${
+                                userVote === "up" 
+                                  ? "text-green-600 bg-green-100 hover:bg-green-200" 
+                                  : "text-navy/60 hover:text-green-600 hover:bg-green-50"
+                              }`}
+                              disabled={!isSignedIn}
+                            >
+                              <ArrowUpCircle className="h-6 w-6" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleVote(item.id, "down")}
+                              className={`transition-all hover:scale-110 ${
+                                userVote === "down" 
+                                  ? "text-red-600 bg-red-100 hover:bg-red-200" 
+                                  : "text-navy/60 hover:text-red-600 hover:bg-red-50"
+                              }`}
+                              disabled={!isSignedIn}
+                            >
+                              <ArrowDownCircle className="h-6 w-6" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -770,31 +544,7 @@ export default function RankingPage({ params }: { params: any }) {
             )}
           </div>
 
-          {/* Premium upgrade notice for non-premium users who own the ranking */}
-          {isSignedIn && !isPremium && ranking && user?.username === ranking.author.name && (
-            <div className="text-center py-6">
-              <Card className="bg-gradient-to-br from-yellow/10 to-orange-400/10 border-2 border-yellow">
-                <CardContent className="p-6">
-                  <Crown className="h-8 w-8 text-yellow mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-navy mb-2">Want to Edit Your Ranking?</h3>
-                  <p className="text-navy/80 mb-4">
-                    Upgrade to Premium to add, remove, and edit items in your rankings!
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button asChild className="bg-yellow hover:bg-yellow/80 text-navy">
-                      <Link href="/premium">
-                        <Crown className="h-4 w-4 mr-2" />
-                        Upgrade to Premium
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="border-yellow text-navy hover:bg-yellow/10">
-                      Learn More About Premium
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+
 
           {!isSignedIn && (
             <div className="text-center py-6">
