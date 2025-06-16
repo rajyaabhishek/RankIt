@@ -16,6 +16,8 @@ const allowedOrigins = [
     'https://rankit.space',
     'https://rank-it-main-o82o1zvbx-abhisheks-projects-10c7cd34.vercel.app',
     'https://rank-it-main-rb4sel0wf-abhisheks-projects-10c7cd34.vercel.app',
+    'https://rank-it-main-iyp6o6qcs-abhisheks-projects-10c7cd34.vercel.app',
+    'https://rank-it-main-ezts2foiz-abhisheks-projects-10c7cd34.vercel.app',
     'https://my-f0kpplqiq-abhisheks-projects-10c7cd34.vercel.app',
     'https://my-pi4dc4ezw-abhisheks-projects-10c7cd34.vercel.app',
     'https://my-cqq7dc5zy-abhisheks-projects-10c7cd34.vercel.app',
@@ -51,15 +53,42 @@ app.use(cors({
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'Content-Type'],
+    optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+    preflightContinue: false
 }));
 
-// Handle preflight requests explicitly
-app.options('*', cors());
+// Handle preflight requests explicitly for all routes
+app.options('*', (req, res) => {
+    const origin = req.headers.origin;
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Max-Age', '86400'); // 24 hours
+        res.status(200).end();
+    } else {
+        res.status(403).json({ error: 'CORS not allowed' });
+    }
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Additional middleware to ensure CORS headers on all responses
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+    }
+    next();
+});
 
 // Configure Cashfree
 console.log('Configuring Cashfree...');
@@ -67,23 +96,23 @@ console.log('Configuring Cashfree...');
 let cashfreeInstance = null;
 
 try {
-    if (process.env.REACT_APP_CASHFREE_APP_ID && process.env.REACT_APP_CASHFREE_SECRET_KEY) {
-        const environment = (process.env.REACT_APP_CASHFREE_ENVIRONMENT === 'production') 
-            ? Cashfree.PRODUCTION 
-            : Cashfree.SANDBOX;
+    if (process.env.NEXT_PUBLIC_CASHFREE_APP_ID && process.env.NEXT_PUBLIC_CASHFREE_SECRET_KEY) {
+        const environment = (process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'production') 
+            ? CFEnvironment.PRODUCTION 
+            : CFEnvironment.SANDBOX;
         
-        // Create Cashfree instance for version >= 5
-        cashfreeInstance = new Cashfree(environment, process.env.REACT_APP_CASHFREE_APP_ID, process.env.REACT_APP_CASHFREE_SECRET_KEY);
+        // Create Cashfree instance for v5+ (correct approach)
+        cashfreeInstance = new Cashfree(environment, process.env.NEXT_PUBLIC_CASHFREE_APP_ID, process.env.NEXT_PUBLIC_CASHFREE_SECRET_KEY);
         
         console.log('✅ Cashfree configured successfully');
-        console.log('Environment:', environment);
-        console.log('App ID:', process.env.REACT_APP_CASHFREE_APP_ID.substring(0, 10) + '...');
+        console.log('Environment:', process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'production' ? 'PRODUCTION' : 'SANDBOX');
+        console.log('App ID:', process.env.NEXT_PUBLIC_CASHFREE_APP_ID.substring(0, 10) + '...');
     } else {
         console.error('❌ Cashfree credentials not found in environment variables');
         console.log('Please ensure you have set:');
-        console.log('- REACT_APP_CASHFREE_APP_ID');
-        console.log('- REACT_APP_CASHFREE_SECRET_KEY');
-        console.log('- REACT_APP_CASHFREE_ENVIRONMENT');
+        console.log('- NEXT_PUBLIC_CASHFREE_APP_ID');
+        console.log('- NEXT_PUBLIC_CASHFREE_SECRET_KEY');
+        console.log('- NEXT_PUBLIC_CASHFREE_ENVIRONMENT');
     }
 } catch (error) {
     console.error('❌ Error configuring Cashfree:', error.message);
@@ -140,22 +169,17 @@ app.listen(port, () => {
     console.log('Allowed origins:', allowedOrigins);
 });
 
-// Temporary debug endpoint - REMOVE AFTER FIXING
-app.get('/debug-auth', (req, res) => {
-    res.json({
-        hasAppId: !!process.env.REACT_APP_CASHFREE_APP_ID,
-        hasSecretKey: !!process.env.REACT_APP_CASHFREE_SECRET_KEY,
-        environment: isProduction ? 'PRODUCTION' : 'SANDBOX',
-        appIdLength: process.env.REACT_APP_CASHFREE_APP_ID ? process.env.REACT_APP_CASHFREE_APP_ID.length : 0,
-        secretLength: process.env.REACT_APP_CASHFREE_SECRET_KEY ? process.env.REACT_APP_CASHFREE_SECRET_KEY.length : 0,
-        appIdStart: process.env.REACT_APP_CASHFREE_APP_ID ? process.env.REACT_APP_CASHFREE_APP_ID.substring(0, 10) : 'none',
-        isPlaceholder: process.env.REACT_APP_CASHFREE_APP_ID === 'TEST1048385683912f7d45f93b4c0f8865838401',
-        startsWithTestYour: process.env.REACT_APP_CASHFREE_APP_ID ? process.env.REACT_APP_CASHFREE_APP_ID.startsWith('TEST_YOUR') : false
-    });
-});
+
 
 // Handle both GET and POST requests for payment
 app.all('/payment', async (req, res) => {
+    // Ensure CORS headers are set for this endpoint
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+        res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
     try {
         const planType = req.query.planType || req.body.planType || 'monthly';
         const userEmail = req.query.userEmail || req.body.userEmail || 'customer@example.com';
@@ -187,43 +211,15 @@ app.all('/payment', async (req, res) => {
                 "billing_cycle": selectedPlan.billingCycle,
                 "display_price": selectedPlan.displayPrice,
                 "return_url": isProduction 
-                    ? "https://my-nmha4dyea-abhisheks-projects-10c7cd34.vercel.app/payment/return?order_id={order_id}" 
+                    ? "https://rank-it-main-ezts2foiz-abhisheks-projects-10c7cd34.vercel.app/payment/return?order_id={order_id}" 
                     : "http://localhost:3000/payment/return?order_id={order_id}",
                 "notify_url": isProduction 
-                    ? `${process.env.REACT_APP_API_URL || 'https://rankit-z5g4.onrender.com'}/webhook` 
+                    ? `${process.env.NEXT_PUBLIC_API_URL || 'https://rankit-z5g4.onrender.com'}/webhook` 
                     : "http://localhost:8000/webhook"
             }
         };
 
-        // Check if using placeholder credentials (temporary development mode)
-        // TEMPORARILY DISABLED - Re-enable after getting real credentials
-        const isUsingPlaceholderCredentials = false;
-        // const isUsingPlaceholderCredentials = 
-        //     process.env.REACT_APP_CASHFREE_APP_ID === 'TEST1048385683912f7d45f93b4c0f8865838401' ||
-        //     !process.env.REACT_APP_CASHFREE_APP_ID ||
-        //     process.env.REACT_APP_CASHFREE_APP_ID.startsWith('TEST_YOUR');
 
-        if (isUsingPlaceholderCredentials) {
-            // TEMPORARY: Mock response for development when using placeholder credentials
-            console.log('🚧 Using placeholder credentials - returning mock payment session');
-            console.log('❌ This will cause "payment_session_id_invalid" error from Cashfree!');
-            console.log('');
-            console.log('To fix this issue:');
-            console.log('1. Go to https://merchant.cashfree.com/');
-            console.log('2. Sign up and get your Sandbox credentials');
-            console.log('3. Set environment variables:');
-            console.log('   REACT_APP_CASHFREE_APP_ID=your_real_app_id');
-            console.log('   REACT_APP_CASHFREE_SECRET_KEY=your_real_secret_key');
-            console.log('   REACT_APP_CASHFREE_ENVIRONMENT=sandbox');
-            console.log('');
-            
-            return res.status(400).json({
-                error: 'Invalid Cashfree credentials',
-                message: 'Please set up real Cashfree credentials. See server logs for instructions.',
-                details: 'Using placeholder/test credentials that will cause payment_session_id_invalid errors',
-                setup_required: true
-            });
-        }
 
         // Check if Cashfree is properly configured
         if (!cashfreeInstance) {
@@ -258,6 +254,13 @@ app.all('/payment', async (req, res) => {
 });
 
 app.post('/verify', async (req, res) => {
+    // Ensure CORS headers are set for this endpoint
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin || '*');
+        res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
     try {
         let { orderId } = req.body;
 

@@ -81,11 +81,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ planType, onSuccess, clas
       const { load } = await import('@cashfreepayments/cashfree-js');
       
       console.log('Environment check:', {
-        CASHFREE_ENVIRONMENT: process.env.REACT_APP_CASHFREE_ENVIRONMENT === 'production' ? 'production' : 'sandbox'
+        CASHFREE_ENVIRONMENT: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
+        env_var: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT
       });
 
       const cashfree = await load({
-        mode: process.env.REACT_APP_CASHFREE_ENVIRONMENT === 'production' ? 'production' : 'sandbox'
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'production' ? 'production' : 'sandbox'
       });
 
       console.log('Cashfree loaded successfully:', cashfree);

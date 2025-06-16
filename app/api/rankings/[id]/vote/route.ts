@@ -85,14 +85,22 @@ export async function POST(
     const body = await request.json();
     let { userId, itemId, direction } = body;
     
-    // If userId is not provided in the request, get it from Clerk auth
+    // If userId is not provided in the request, try to get it from Clerk auth
     if (!userId) {
-      const user = await currentUser();
-      if (!user) {
-        return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 });
+      try {
+        const user = await currentUser();
+        if (user?.id) {
+          userId = user.id;
+        } else {
+          return NextResponse.json({ success: false, error: 'User not authenticated' }, { status: 401 });
+        }
+      } catch (clerkError: any) {
+        console.warn('Clerk authentication failed:', clerkError?.message || 'Unknown error');
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Authentication required. Please provide userId in request body or sign in.' 
+        }, { status: 401 });
       }
-      const clerkUserId = user.id;
-      userId = clerkUserId;
     }
 
     if (!rankingId || !userId || itemId === undefined) {

@@ -4,18 +4,28 @@ import { currentUser } from '@clerk/nextjs/server';
 
 export async function GET(request: Request) {
   try {
-    // Get the authenticated user
-    const user = await currentUser();
-    
-    // Extract userId from query params as fallback
+    // Extract userId from query params first
     const url = new URL(request.url);
     const queryUserId = url.searchParams.get('userId');
     
-    // Use authenticated user ID or query param
-    const userId = user?.id || queryUserId;
+    let userId = queryUserId;
+    
+    // Try to get authenticated user as fallback
+    try {
+      const user = await currentUser();
+      if (!userId && user?.id) {
+        userId = user.id;
+      }
+    } catch (clerkError: any) {
+      console.warn('Clerk authentication not available:', clerkError?.message || 'Unknown error');
+      // Continue with queryUserId if available
+    }
 
     if (!userId) {
-      return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'User ID is required. Please provide userId parameter or sign in.' 
+      }, { status: 400 });
     }
 
     const votes = await getUserVotes(userId);
